@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loop For Money (LFM) Store</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+        header { background-color: #f57224; padding: 15px; color: white; text-align: center; font-size: 22px; font-weight: bold; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .product-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .product-card img { width: 100%; height: 200px; object-fit: cover; border-radius: 4px; }
+        .product-title { font-size: 18px; margin: 10px 0; color: #333; font-weight: bold; }
+        .product-price { color: #f57224; font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+        input, select { width: 93%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        .buy-btn { background-color: #f57224; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        .buy-btn:hover { background-color: #d45d1b; }
+    </style>
+</head>
+<body>
+
+    <header>Loop For Money (LFM) Store</header>
+
+    <div class="container">
+        {% for product in products %}
+        <div class="product-card">
+            <img src="{{ product.image }}" alt="{{ product.name }}">
+            <div class="product-title">{{ product.name }}</div>
+            <div class="product-price">৳{{ product.price }}</div>
+            
+            <form action="/buy/{{ product.id }}" method="POST">
+                <input type="text" name="customer_name" placeholder="আপনার নাম" required>
+                <input type="text" name="phone" placeholder="মোবাইল নম্বর" required>
+                <input type="text" name="address" placeholder="পূর্ণ ঠিকানা (জেলা, থানা, গ্রাম)" required>
+                
+                <select name="payment_method" required>
+                    <option value="COD">ক্যাশ অন ডেলিভারি (COD)</option>
+                    <option value="bKash">বিকাশ (Personal)</option>
+                    <option value="Nagad">নগদ (Personal)</option>
+                </select>
+                <input type="text" name="txid" placeholder="TrxID (বিকাশ/নগদ দিলে দিন)">
+                
+                <button type="submit" class="buy-btn">Order Now</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+
+</body>
+  </html>
