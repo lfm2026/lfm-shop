@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <img src="{{ product[6] }}" class="img-fluid border border-success rounded" alt="Product Image">
+        
+        {% if product[7] %}
+        <h4 class="mt-4">ভিডিও প্রিভিউ:</h4>
+        <!-- ভিডিও সাপোর্ট (YouTube/MP4) -->
+        <div class="ratio ratio-16x9">
+            <iframe src="{{ product[7] }}" allowfullscreen></iframe>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-6">
+        <h1>{{ product[1] }}</h1>
+        <h3 class="text-warning">দাম: ৳{{ product[4] }}</h3>
+        <p><b>সাইজ:</b> {{ product[2] }}</p>
+        <p><b>স্টক:</b> <span class="badge bg-success">{{ product[5] }}</span></p>
+        <hr style="border-color:#00ff66;">
+        <h5>পণ্যের বিস্তারিত:</h5>
+        <p>{{ product[3] }}</p>
+        
+        <a href="/add_to_cart/{{ product[0] }}" class="btn btn-custom btn-lg w-100 mt-3">Add to Cart 🛒</a>
+    </div>
+</div>
+
+<hr class="mt-5" style="border-color:#00ff66;">
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <h3>কাস্টমার রিভিউ ও রেটিং ⭐</h3>
+        {% for r in reviews %}
+        <div class="card p-3 mb-2">
+            <strong>{{ r[2] }}</strong> 
+            <span class="text-warning">⭐ {{ r[0] }}/5</span>
+            <p class="mb-0">{{ r[1] }}</p>
+        </div>
+        {% else %}
+        <p>এখনো কোনো রিভিউ নেই।</p>
+        {% endfor %}
+        
+        {% if session.get('user_id') %}
+        <form method="POST" class="mt-4 bg-dark p-3 border border-secondary rounded">
+            <h5>রিভিউ দিন (শুধুমাত্র ডেলিভারি পাওয়া ইউজারদের জন্য)</h5>
+            <select name="rating" class="form-select mb-2" required>
+                <option value="5">⭐⭐⭐⭐⭐ (অসাধারণ)</option>
+                <option value="4">⭐⭐⭐⭐ (ভালো)</option>
+                <option value="3">⭐⭐⭐ (মোটামুটি)</option>
+            </select>
+            <textarea name="comment" class="form-control mb-2" placeholder="আপনার মতামত লিখুন..." required></textarea>
+            <button type="submit" class="btn btn-custom">রিভিউ সাবমিট করুন</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
