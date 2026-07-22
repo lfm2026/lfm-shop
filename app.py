@@ -9,7 +9,7 @@ app = Flask(__name__)
 app.secret_key = "lfm_secret_key_2026"
 DB_NAME = "database.db"
 
-# ==================== ১. ডেটাবেস অটো-ইনিশিয়ালাইজেশন (Render Error Fix) ====================
+# ==================== ১. ডেটাবেস অটো-ইনিশিয়ালাইজেশন ====================
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -49,7 +49,7 @@ def init_db():
         )
     ''')
     
-    # ডেমো ডাটা যোগ করা (যদি টেবিল খালি থাকে)
+    # ডেমো ডাটা যোগ করা
     cursor.execute("SELECT COUNT(*) FROM products")
     if cursor.fetchone()[0] == 0:
         cursor.execute("INSERT INTO products (name, price, commission, image) VALUES (?, ?, ?, ?)",
@@ -65,24 +65,19 @@ def init_db():
     conn.commit()
     conn.close()
 
-# অ্যাপ চালু হওয়ার সাথেই টেবিল তৈরি হয়ে যাবে
+# অ্যাপ চালু হওয়ার সাথে সাথে টেবিল সেটআপ হবে
 init_db()
 
-# ==================== ২. অটোমেটিক ইমেইল হেলপার ====================
+# ==================== ২. অটো ইমেইল হেলপার ====================
 def send_auto_email(user_email, subject, body):
     try:
-        sender_email = "your_email@gmail.com"  # তোমার জিমেইল
-        sender_pass = "your_app_password"     # জিমেইল অ্যাপ পাসওয়ার্ড
+        sender_email = "your_email@gmail.com"
+        sender_pass = "your_app_password"
         
         msg = MIMEText(body)
         msg['Subject'] = subject
         msg['From'] = sender_email
         msg['To'] = user_email
-        
-        # জিমেইল সেটআপ করা থাকলে নিচের ৩ লাইনের কমেন্ট (#) তুলে দেবে
-        # with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-        #     server.login(sender_email, sender_pass)
-        #     server.sendmail(sender_email, user_email, msg.as_string())
         print(f"Email sent to {user_email}")
     except Exception as e:
         print(f"Email error: {e}")
@@ -127,7 +122,7 @@ def order(product_id):
     conn.close()
     return render_template('order.html', product=product, ref=ref)
 
-# ==================== ৫. অ্যাডমিন প্যানেল (Order & Product Manage) ====================
+# ==================== ৫. অ্যাডমিন প্যানেল ====================
 @app.route('/admin')
 def admin_panel():
     conn = sqlite3.connect(DB_NAME)
@@ -139,7 +134,7 @@ def admin_panel():
     conn.close()
     return render_template('admin.html', orders=orders, products=products)
 
-# অর্ডার স্ট্যাটাস আপডেট + হোয়াটসঅ্যাপ ও ইমেইল নোটিফিকেশন
+# অর্ডার স্ট্যাটাস আপডেট
 @app.route('/admin/update-status/<int:order_id>/<status>')
 def update_order_status(order_id, status):
     conn = sqlite3.connect(DB_NAME)
@@ -151,7 +146,6 @@ def update_order_status(order_id, status):
     if order:
         cursor.execute("UPDATE orders SET status = ? WHERE id = ?", (status, order_id))
         
-        # যদি কাস্টমার Product রিসিভ করে (Done) এবং কোনো ম্যানেজারের রেফারেল থাকে, তবে অটো কমিশন যোগ হবে
         if status == 'Done' and order[6]:
             cursor.execute("SELECT price, commission FROM products WHERE name = ?", (order[1],))
             prod = cursor.fetchone()
@@ -162,12 +156,10 @@ def update_order_status(order_id, status):
         conn.commit()
         conn.close()
 
-        # ১. অটো ইমেইল ট্র্রিগার
         subject = f"LFM Order Update - #{order_id}"
         body = f"প্রিয় {order[2]},\nআপনার অর্ডার #{order_id} এর বর্তমান স্ট্যাটাস: {status}।"
         send_auto_email(order[4], subject, body)
 
-        # ২. ডিরেক্ট হোয়াটসঅ্যাপ মেসেজ লিংক
         wa_message = f"🔥 *LFM Order Update* 🔥\n\nপ্রিয় {order[2]},\nআপনার অর্ডার #{order_id} এর বর্তমান স্ট্যাটাস: *{status}*!\n\nধন্যবাদ,\nLFM Team"
         encoded_msg = urllib.parse.quote(wa_message)
         wa_url = f"https://wa.me/88{order[3]}?text={encoded_msg}"
@@ -177,10 +169,10 @@ def update_order_status(order_id, status):
     conn.close()
     return redirect(url_for('admin_panel'))
 
-# ==================== ৬. ম্যানেজার প্যানেল (দালাল / অ্যাফিলিয়েট) ====================
+# ==================== ৬. ম্যানেজার প্যানেল ====================
 @app.route('/manager')
 def manager_panel():
-    mng_id = "MNG101" # উদাহরণস্বরূপ ডেমো আইডি
+    mng_id = "MNG101"
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM managers WHERE mng_id = ?", (mng_id,))
@@ -190,7 +182,7 @@ def manager_panel():
     conn.close()
     return render_template('manager.html', mng_id=mng_id, info=info, products=products)
 
-# ==================== ৭. সুপার কন্ট্রোল প্যানেল (Owner Control) ====================
+# ==================== ৭. কন্ট্রোলার প্যানেল ====================
 @app.route('/controller')
 def controller_panel():
     conn = sqlite3.connect(DB_NAME)
