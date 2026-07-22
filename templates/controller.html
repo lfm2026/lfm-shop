@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Super Controller Panel</title>
+    <style>
+        body { background: #000; color: #00ff66; font-family: monospace; padding: 20px; }
+        .card { border: 2px solid #00ff66; padding: 20px; width: 300px; }
+    </style>
+</head>
+<body>
+    <h1>👑 SUPER CONTROLLER PANEL 👑</h1>
+    
+    <div class="card">
+        <h2>মোট প্ল্যাটফর্ম সেলস: ৳{{ total_sales }}</h2>
+        <h3>মোট অর্ডারের সংখ্যা: {{ orders|length }}</h3>
+    </div>
+
+    <h2>ম্যানেজারদের কমিশন লিস্ট:</h2>
+    <ul>
+        {% for mng_id, data in managers.items() %}
+            <li><b>ম্যানেজার: {{ data.name }} ({{ mng_id }})</b> — বর্তমান ব্যালেন্স: ৳{{ data.balance }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
