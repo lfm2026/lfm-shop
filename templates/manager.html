@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Manager Dashboard</title>
+    <style>
+        body { background: #181818; color: #fff; font-family: sans-serif; padding: 20px; }
+        .box { background: #222; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>ম্যানেজার (দালাল) ড্যাশবোর্ড</h1>
+    <div class="box">
+        <h3>আপনার ম্যানেজার ID: <span style="color:#00ff66;">{{ mng_id }}</span></h3>
+        <h3>আপনার বর্তমান জমানো কমিশন: <span style="color:yellow;">৳{{ info.balance }}</span></h3>
+    </div>
+
+    <h2>শেয়ার করার জন্য আপনার প্রোডাক্ট লিঙ্ক:</h2>
+    <ul>
+        {% for product in products %}
+        <li>
+            <b>{{ product.name }}</b> (কমিশন: ৳{{ product.commission }})<br>
+            <code>http://127.0.0.1:5000/order/{{ product.id }}?ref={{ mng_id }}</code>
+        </li>
+        <br>
+        {% endfor %}
+    </ul>
+</body>
+</html>
