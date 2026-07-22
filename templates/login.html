@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card p-4">
+            <h3 class="text-center">লগইন করুন</h3>
+            <form method="POST">
+                <input type="hidden" name="action" value="login">
+                <input type="text" name="phone" class="form-control mb-3" placeholder="ফোন নম্বর" required>
+                <input type="password" name="password" class="form-control mb-3" placeholder="পাসওয়ার্ড" required>
+                <button type="submit" class="btn btn-custom w-100">লগইন</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="col-md-5">
+        <div class="card p-4">
+            <h3 class="text-center">নতুন অ্যাকাউন্ট খুলুন (ফ্রি)</h3>
+            <form method="POST">
+                <input type="hidden" name="action" value="signup">
+                <input type="text" name="username" class="form-control mb-3" placeholder="ইউনিক ইউজারনেম" required>
+                <input type="text" name="phone" class="form-control mb-3" placeholder="ফোন নম্বর (১টি নম্বরে ১টি আইডি)" required>
+                <input type="password" name="password" class="form-control mb-3" placeholder="পাসওয়ার্ড" required>
+                <button type="submit" class="btn btn-outline-success w-100">সাইনআপ</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
