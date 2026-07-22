@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>আপনার শপিং কার্ট 🛒</h2>
+<div class="card p-4">
+    <ul>
+        {% for item in items %}
+        <li>{{ item[1] }} - ৳{{ item[4] }}</li>
+        {% else %}
+        <p>আপনার কার্ট খালি!</p>
+        {% endfor %}
+    </ul>
+    
+    {% if items %}
+    <h3 class="text-warning">সর্বমোট: ৳{{ total }}</h3>
+    <hr style="border-color:#00ff66;">
+    <form method="POST">
+        <label>আপনার সম্পূর্ণ ঠিকানা ও মোবাইল নম্বর দিন:</label>
+        <textarea name="address" class="form-control mb-3" required></textarea>
+        <button type="submit" class="btn btn-custom w-100">অর্ডার কনফার্ম করুন (Cash on Delivery)</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
