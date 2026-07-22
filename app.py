@@ -4,10 +4,10 @@ import urllib.parse
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = "lfm_daraz_pro_max_2026"
+app.secret_key = "lfm_pro_luxury_key_2026"
 DB_NAME = "database.db"
 
-# ==================== ডেটাবেস ইনিশিয়ালাইজেশন ====================
+# ==================== Database Setup ====================
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
@@ -59,7 +59,7 @@ def init_db():
         comment TEXT
     )''')
 
-    # Default Controller Account (যদি না থাকে)
+    # Controller Account setup
     c.execute("SELECT * FROM users WHERE role='controller'")
     if not c.fetchone():
         c.execute("INSERT INTO users (username, phone, password, role) VALUES (?, ?, ?, ?)", 
@@ -70,58 +70,70 @@ def init_db():
 
 init_db()
 
-# ==================== লগইন চেকার ====================
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            flash("অনুগ্রহ করে আগে লগইন করুন!", "danger")
+            flash("অনুগ্রহ করে আগে লগইন করুন!", "warning")
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
 
-# ==================== লগইন / সাইনআপ ====================
+# ==================== Auth Routes (Separated) ====================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        action = request.form.get('action')
         phone = request.form.get('phone')
         password = request.form.get('password')
         
         conn = sqlite3.connect(DB_NAME)
         c = conn.cursor()
-        
-        if action == 'signup':
-            username = request.form.get('username')
-            try:
-                c.execute("INSERT INTO users (username, phone, password) VALUES (?, ?, ?)", (username, phone, password))
-                conn.commit()
-                flash("অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে! এবার লগইন করুন।", "success")
-            except sqlite3.IntegrityError:
-                flash("এই নম্বর বা ইউজারনেম দিয়ে আগে থেকেই অ্যাকাউন্ট আছে!", "danger")
-                
-        elif action == 'login':
-            c.execute("SELECT * FROM users WHERE phone=? AND password=?", (phone, password))
-            user = c.fetchone()
-            if user:
-                if user[5] == 1: # is_blocked
-                    flash("আপনার অ্যাকাউন্ট ব্লক করা হয়েছে!", "danger")
-                else:
-                    session['user_id'] = user[0]
-                    session['username'] = user[1]
-                    session['role'] = user[4]
-                    return redirect(url_for('home'))
-            else:
-                flash("ফোন নম্বর বা পাসওয়ার্ড ভুল!", "danger")
+        c.execute("SELECT * FROM users WHERE phone=? AND password=?", (phone, password))
+        user = c.fetchone()
         conn.close()
+        
+        if user:
+            if user[5] == 1:
+                flash("আপনার অ্যাকাউন্টটি ব্লক করা হয়েছে! হেল্পডেস্কে যোগাযোগ করুন।", "danger")
+            else:
+                session['user_id'] = user[0]
+                session['username'] = user[1]
+                session['role'] = user[4]
+                flash("সফলভাবে লগইন হয়েছে!", "success")
+                return redirect(url_for('home'))
+        else:
+            flash("ফোন নম্বর বা পাসওয়ার্ড ভুল দেওয়া হয়েছে!", "danger")
+            
     return render_template('login.html')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        phone = request.form.get('phone')
+        password = request.form.get('password')
+        
+        conn = sqlite3.connect(DB_NAME)
+        c = conn.cursor()
+        try:
+            c.execute("INSERT INTO users (username, phone, password) VALUES (?, ?, ?)", (username, phone, password))
+            conn.commit()
+            conn.close()
+            flash("অ্যাকাউন্ট তৈরি হয়েছে! এবার লগইন করুন।", "success")
+            return redirect(url_for('login'))
+        except sqlite3.IntegrityError:
+            conn.close()
+            flash("এই ফোন নম্বর বা ইউজারনেম দিয়ে ইতিমধ্যেই অ্যাকাউন্ট রয়েছে!", "danger")
+            
+    return render_template('signup.html')
 
 @app.route('/logout')
 def logout():
     session.clear()
+    flash("লগআউট সফল হয়েছে।", "info")
     return redirect(url_for('home'))
 
-# ==================== ইউজার প্যানেল (হোম, প্রোডাক্ট, কার্ট) ====================
+# ==================== Main Store Routes ====================
 @app.route('/')
 def home():
     conn = sqlite3.connect(DB_NAME)
@@ -140,7 +152,6 @@ def view_product(product_id):
         rating = request.form.get('rating')
         comment = request.form.get('comment')
         
-        # চেক করবে এই ইউজার প্রোডাক্টটি ডেলিভারি পেয়েছে কিনা
         c.execute("SELECT * FROM orders WHERE user_id=? AND product_id=? AND status='Delivered'", (session['user_id'], product_id))
         if c.fetchone():
             c.execute("INSERT INTO reviews (product_id, user_id, rating, comment) VALUES (?, ?, ?, ?)", 
@@ -148,15 +159,15 @@ def view_product(product_id):
             conn.commit()
             flash("আপনার রিভিউ যোগ করা হয়েছে!", "success")
         else:
-            flash("পণ্যটি ডেলিভারি পাওয়ার পর আপনি রিভিউ দিতে পারবেন!", "danger")
+            flash("পণ্যটি হাতে পাওয়ার পরেই কেবল রিভিউ দেওয়া সম্ভব!", "warning")
             
     c.execute("SELECT * FROM products WHERE id=?", (product_id,))
     product = c.fetchone()
     
     c.execute("SELECT r.rating, r.comment, u.username FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.product_id=?", (product_id,))
     reviews = c.fetchall()
-    
     conn.close()
+    
     return render_template('product.html', product=product, reviews=reviews)
 
 @app.route('/add_to_cart/<int:product_id>')
@@ -167,8 +178,8 @@ def add_to_cart(product_id):
     c.execute("INSERT INTO cart (user_id, product_id) VALUES (?, ?)", (session['user_id'], product_id))
     conn.commit()
     conn.close()
-    flash("পণ্যটি কার্টে যোগ হয়েছে!", "success")
-    return redirect(url_for('home'))
+    flash("পণ্যটি কার্টে যোগ করা হয়েছে!", "success")
+    return redirect(url_for('cart'))
 
 @app.route('/cart', methods=['GET', 'POST'])
 @login_required
@@ -182,24 +193,21 @@ def cart():
         cart_items = c.fetchall()
         
         for item in cart_items:
-            # স্টক কমানো
             c.execute("UPDATE products SET stock = stock - 1 WHERE id=?", (item[0],))
-            # অর্ডার প্লেস
             c.execute("INSERT INTO orders (user_id, product_id, address) VALUES (?, ?, ?)", (session['user_id'], item[0], address))
             
-        # কার্ট ক্লিয়ার
         c.execute("DELETE FROM cart WHERE user_id=?", (session['user_id'],))
         conn.commit()
-        flash("আপনার অর্ডার সফলভাবে প্লেস হয়েছে!", "success")
+        flash("অর্ডার সফলভাবে প্লেস হয়েছে!", "success")
         return redirect(url_for('home'))
         
     c.execute("SELECT p.*, c.id FROM cart c JOIN products p ON c.product_id = p.id WHERE c.user_id=?", (session['user_id'],))
     items = c.fetchall()
-    total = sum([item[4] for item in items]) # item[4] is price
+    total = sum([item[4] for item in items])
     conn.close()
     return render_template('cart.html', items=items, total=total)
 
-# ==================== অ্যাডমিন প্যানেল ====================
+# ==================== Admin & Controller Routes ====================
 @app.route('/admin', methods=['GET', 'POST'])
 @login_required
 def admin_panel():
@@ -212,28 +220,18 @@ def admin_panel():
     if request.method == 'POST':
         action = request.form.get('action')
         if action == 'add_product':
-            name = request.form.get('name')
-            size = request.form.get('size')
-            desc = request.form.get('description')
-            price = request.form.get('price')
-            stock = request.form.get('stock')
-            image = request.form.get('image')
-            video = request.form.get('video')
             c.execute("INSERT INTO products (name, size, description, price, stock, image, video) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                      (name, size, desc, price, stock, image, video))
+                      (request.form.get('name'), request.form.get('size'), request.form.get('description'), 
+                       request.form.get('price'), request.form.get('stock'), request.form.get('image'), request.form.get('video')))
             conn.commit()
         elif action == 'delete_product':
-            pid = request.form.get('product_id')
-            c.execute("DELETE FROM products WHERE id=?", (pid,))
+            c.execute("DELETE FROM products WHERE id=?", (request.form.get('product_id'),))
             conn.commit()
             
     c.execute("SELECT * FROM products")
     products = c.fetchall()
-    
-    # Orders with user details
     c.execute("SELECT o.id, u.username, u.phone, p.name, o.address, o.status FROM orders o JOIN users u ON o.user_id = u.id JOIN products p ON o.product_id = p.id ORDER BY o.id DESC")
     orders = c.fetchall()
-    
     conn.close()
     return render_template('admin.html', products=products, orders=orders)
 
@@ -246,26 +244,23 @@ def update_order(order_id, status):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute("UPDATE orders SET status=? WHERE id=?", (status, order_id))
-    
-    # WhatsApp Logic
     c.execute("SELECT u.phone, u.username FROM orders o JOIN users u ON o.user_id=u.id WHERE o.id=?", (order_id,))
     user_info = c.fetchone()
     conn.commit()
     conn.close()
     
     if user_info:
-        wa_text = urllib.parse.quote(f"হ্যালো {user_info[1]},\nআপনার অর্ডারটির বর্তমান স্ট্যাটাস: {status}।\n- LFM Team")
+        wa_text = urllib.parse.quote(f"প্রিয় {user_info[1]},\nআপনার অর্ডার #{order_id} এর বর্তমান স্ট্যাটাস: *{status}*।\n- LFM Team")
         wa_url = f"https://wa.me/88{user_info[0]}?text={wa_text}"
         return redirect(wa_url)
         
     return redirect(url_for('admin_panel'))
 
-# ==================== কন্ট্রোলার প্যানেল ====================
 @app.route('/controller', methods=['GET', 'POST'])
 @login_required
 def controller_panel():
     if session.get('role') != 'controller':
-        return "Only SuperAdmin (Controller) can access this."
+        return "Only SuperAdmin (Controller) can access."
         
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
