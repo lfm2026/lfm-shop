@@ -65,7 +65,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-# অ্যাপ চালু হওয়ার সাথে সাথে টেবিল তৈরি হয়ে যাবে
+# অ্যাপ চালু হওয়ার সাথেই টেবিল তৈরি হয়ে যাবে
 init_db()
 
 # ==================== ২. অটোমেটিক ইমেইল হেলপার ====================
@@ -79,7 +79,7 @@ def send_auto_email(user_email, subject, body):
         msg['From'] = sender_email
         msg['To'] = user_email
         
-        # জিমেইল সেটআপ করা থাকলে নিচের লাইনগুলোর কমেন্ট তুলে দেবে
+        # জিমেইল সেটআপ করা থাকলে নিচের ৩ লাইনের কমেন্ট (#) তুলে দেবে
         # with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
         #     server.login(sender_email, sender_pass)
         #     server.sendmail(sender_email, user_email, msg.as_string())
@@ -151,7 +151,7 @@ def update_order_status(order_id, status):
     if order:
         cursor.execute("UPDATE orders SET status = ? WHERE id = ?", (status, order_id))
         
-        # যদি অর্ডার Done/Received হয় এবং কোনো ম্যানেজারের রেফারেল থাকে, তবে কমিশন যোগ হবে
+        # যদি কাস্টমার Product রিসিভ করে (Done) এবং কোনো ম্যানেজারের রেফারেল থাকে, তবে অটো কমিশন যোগ হবে
         if status == 'Done' and order[6]:
             cursor.execute("SELECT price, commission FROM products WHERE name = ?", (order[1],))
             prod = cursor.fetchone()
@@ -167,7 +167,7 @@ def update_order_status(order_id, status):
         body = f"প্রিয় {order[2]},\nআপনার অর্ডার #{order_id} এর বর্তমান স্ট্যাটাস: {status}।"
         send_auto_email(order[4], subject, body)
 
-        # ২. ডিরেক্ট হোয়াটসঅ্যাপ মেসেজ লিঙ্ক
+        # ২. ডিরেক্ট হোয়াটসঅ্যাপ মেসেজ লিংক
         wa_message = f"🔥 *LFM Order Update* 🔥\n\nপ্রিয় {order[2]},\nআপনার অর্ডার #{order_id} এর বর্তমান স্ট্যাটাস: *{status}*!\n\nধন্যবাদ,\nLFM Team"
         encoded_msg = urllib.parse.quote(wa_message)
         wa_url = f"https://wa.me/88{order[3]}?text={encoded_msg}"
@@ -180,7 +180,7 @@ def update_order_status(order_id, status):
 # ==================== ৬. ম্যানেজার প্যানেল (দালাল / অ্যাফিলিয়েট) ====================
 @app.route('/manager')
 def manager_panel():
-    mng_id = "MNG101" # উদাহরণস্বরূপ
+    mng_id = "MNG101" # উদাহরণস্বরূপ ডেমো আইডি
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM managers WHERE mng_id = ?", (mng_id,))
