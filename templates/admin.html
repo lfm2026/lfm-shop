@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <style>
+        body { background: #111; color: #fff; font-family: sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #444; padding: 10px; text-align: center; }
+        .btn-approve { background: green; color: #fff; padding: 5px 10px; text-decoration: none; border-radius: 3px; }
+        .btn-reject { background: red; color: #fff; padding: 5px 10px; text-decoration: none; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>অ্যাডমিন কন্ট্রোল প্যানেল</h1>
+    
+    <h2>সকল অর্ডার লিস্ট:</h2>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>কাস্টমার</th>
+            <th>ফোন</th>
+            <th>পণ্য</th>
+            <th>রেফারেল (ম্যানেজার)</th>
+            <th>স্ট্যাটাস</th>
+            <th>অ্যাকশন (WhatsApp & Auto Mail)</th>
+        </tr>
+        {% for order in orders %}
+        <tr>
+            <td>#{{ order.order_id }}</td>
+            <td>{{ order.customer_name }}</td>
+            <td>{{ order.phone }}</td>
+            <td>{{ order.product }}</td>
+            <td>{{ order.ref_manager if order.ref_manager else 'নাই' }}</td>
+            <td><b>{{ order.status }}</b></td>
+            <td>
+                <a href="/admin/update-status/{{ order.order_id }}/Approved" class="btn-approve">Approve</a>
+                <a href="/admin/update-status/{{ order.order_id }}/In-Courier" style="background: orange; color:#000;" class="btn-approve">Courier</a>
+                <a href="/admin/update-status/{{ order.order_id }}/Done" style="background: blue;" class="btn-approve">Done</a>
+                <a href="/admin/update-status/{{ order.order_id }}/Rejected" class="btn-reject">Reject</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
