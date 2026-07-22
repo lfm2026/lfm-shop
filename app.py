@@ -1,50 +1,112 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, flash
+import sqlite3
 import urllib.parse
 import smtplib
 from email.mime.text import MIMEText
+import os
 
 app = Flask(__name__)
-app.secret_key = "lfm_secret_key_123"
+app.secret_key = "lfm_secret_key_2026"
+DB_NAME = "database.db"
 
-# টেস্টের জন্য মেমোরি ডেটাবেস (পরে এটি SQLite বা DB তে যাবে)
-products = [
-    {"id": 1, "name": "Premium Cyber T-Shirt", "price": 500, "commission": 50, "image": "https://via.placeholder.com/150"},
-    {"id": 2, "name": "Hacker Neon Hoodie", "price": 1200, "commission": 120, "image": "https://via.placeholder.com/150"}
-]
+# ==================== ১. ডেটাবেস অটো-ইনিশিয়ালাইজেশন (Render Error Fix) ====================
+def init_db():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    # Products টেবিল তৈরি
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS products (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            price REAL NOT NULL,
+            commission REAL DEFAULT 0,
+            image TEXT
+        )
+    ''')
+    
+    # Orders টেবিল তৈরি
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_name TEXT,
+            customer_name TEXT,
+            phone TEXT,
+            email TEXT,
+            address TEXT,
+            ref_manager TEXT,
+            status TEXT DEFAULT 'Pending'
+        )
+    ''')
+    
+    # Managers (দালাল) টেবিল তৈরি
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS managers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            mng_id TEXT UNIQUE,
+            name TEXT,
+            balance REAL DEFAULT 0
+        )
+    ''')
+    
+    # ডেমো ডাটা যোগ করা (যদি টেবিল খালি থাকে)
+    cursor.execute("SELECT COUNT(*) FROM products")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("INSERT INTO products (name, price, commission, image) VALUES (?, ?, ?, ?)",
+                       ("Premium Cyber T-Shirt", 500, 50, "https://via.placeholder.com/150"))
+        cursor.execute("INSERT INTO products (name, price, commission, image) VALUES (?, ?, ?, ?)",
+                       ("Hacker Neon Hoodie", 1200, 120, "https://via.placeholder.com/150"))
+        
+    cursor.execute("SELECT COUNT(*) FROM managers")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("INSERT INTO managers (mng_id, name, balance) VALUES (?, ?, ?)",
+                       ("MNG101", "Sohan", 0))
 
-orders = []
-managers = {"MNG101": {"name": "Sohan", "balance": 0}}
+    conn.commit()
+    conn.close()
 
-# ইমেইল পাঠানোর হেলপার ফাংশন (১০০% ফ্রি)
+# অ্যাপ চালু হওয়ার সাথে সাথে টেবিল তৈরি হয়ে যাবে
+init_db()
+
+# ==================== ২. অটোমেটিক ইমেইল হেলপার ====================
 def send_auto_email(user_email, subject, body):
     try:
-        # এখানে তোমার জিমেইল অ্যাপ পাসওয়ার্ড সেট করতে পারো
-        sender_email = "your_email@gmail.com"
-        sender_pass = "your_app_password"
+        sender_email = "your_email@gmail.com"  # তোমার জিমেইল
+        sender_pass = "your_app_password"     # জিমেইল অ্যাপ পাসওয়ার্ড
         
         msg = MIMEText(body)
         msg['Subject'] = subject
         msg['From'] = sender_email
         msg['To'] = user_email
         
+        # জিমেইল সেটআপ করা থাকলে নিচের লাইনগুলোর কমেন্ট তুলে দেবে
         # with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
         #     server.login(sender_email, sender_pass)
         #     server.sendmail(sender_email, user_email, msg.as_string())
         print(f"Email sent to {user_email}")
     except Exception as e:
-        print(f"Email failed: {e}")
+        print(f"Email error: {e}")
 
-# ==================== ১. মূল হোম পেজ ====================
+# ==================== ৩. হোম পেজ (User Panel) ====================
 @app.route('/')
 def home():
     ref = request.args.get('ref', '')
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM products")
+    products = cursor.fetchall()
+    conn.close()
     return render_template('index.html', products=products, ref=ref)
 
-# ==================== ২. ইউজার অর্ডার সিস্টেম ====================
+# ==================== ৪. ইউজার অর্ডার সিস্টেম ====================
 @app.route('/order/<int:product_id>', methods=['GET', 'POST'])
 def order(product_id):
-    product = next((p for p in products if p['id'] == product_id), None)
     ref = request.args.get('ref', '')
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM products WHERE id = ?", (product_id,))
+    product = cursor.fetchone()
 
     if request.method == 'POST':
         name = request.form.get('name')
@@ -52,60 +114,93 @@ def order(product_id):
         address = request.form.get('address')
         email = request.form.get('email')
         
-        order_data = {
-            "order_id": len(orders) + 1,
-            "product": product['name'],
-            "price": product['price'],
-            "customer_name": name,
-            "phone": phone,
-            "email": email,
-            "address": address,
-            "ref_manager": ref,
-            "status": "Pending"
-        }
-        orders.append(order_data)
+        cursor.execute('''
+            INSERT INTO orders (product_name, customer_name, phone, email, address, ref_manager, status)
+            VALUES (?, ?, ?, ?, ?, ?, 'Pending')
+        ''', (product[1], name, phone, email, address, ref))
         
-        return f"<h3>আপনার অর্ডার সফল হয়েছে! অর্ডার আইডি: #{order_data['order_id']}</h3><a href='/'>হোমে ফিরে যান</a>"
+        conn.commit()
+        conn.close()
+        
+        return f"<div style='text-align:center; padding:50px; background:#0d1117; color:#00ff66; font-family:monospace;'><h2>আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে!</h2><a href='/' style='color:#fff;'>হোম পেজে ফিরে যান</a></div>"
 
+    conn.close()
     return render_template('order.html', product=product, ref=ref)
 
-# ==================== ৩. অ্যাডমিন প্যানেল ====================
+# ==================== ৫. অ্যাডমিন প্যানেল (Order & Product Manage) ====================
 @app.route('/admin')
 def admin_panel():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM orders ORDER BY id DESC")
+    orders = cursor.fetchall()
+    cursor.execute("SELECT * FROM products")
+    products = cursor.fetchall()
+    conn.close()
     return render_template('admin.html', orders=orders, products=products)
 
+# অর্ডার স্ট্যাটাস আপডেট + হোয়াটসঅ্যাপ ও ইমেইল নোটিফিকেশন
 @app.route('/admin/update-status/<int:order_id>/<status>')
 def update_order_status(order_id, status):
-    order = next((o for o in orders if o['order_id'] == order_id), None)
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM orders WHERE id = ?", (order_id,))
+    order = cursor.fetchone()
+    
     if order:
-        order['status'] = status
+        cursor.execute("UPDATE orders SET status = ? WHERE id = ?", (status, order_id))
         
-        # ১. অটোমেটিক ইমেইল পাঠাবে
-        email_subject = f"LFM Order Update - Status: {status}"
-        email_body = f"প্রিয় {order['customer_name']},\nআপনার অর্ডার #{order['order_id']} স্ট্যাটাস এখন: {status}।"
-        send_auto_email(order['email'], email_subject, email_body)
-        
-        # ২. হোয়াটসঅ্যাপ মেসেজসহ ডিরেক্ট লিঙ্ক তৈরি
-        wa_message = f"🔥 *LFM Order Update* 🔥\n\nপ্রিয় {order['customer_name']},\nআপনার অর্ডার আইডি #{order['order_id']} এর স্ট্যাটাস: *{status}*!\n\nধন্যবাদ,\nLFM Team"
+        # যদি অর্ডার Done/Received হয় এবং কোনো ম্যানেজারের রেফারেল থাকে, তবে কমিশন যোগ হবে
+        if status == 'Done' and order[6]:
+            cursor.execute("SELECT price, commission FROM products WHERE name = ?", (order[1],))
+            prod = cursor.fetchone()
+            if prod:
+                commission = prod[1]
+                cursor.execute("UPDATE managers SET balance = balance + ? WHERE mng_id = ?", (commission, order[6]))
+
+        conn.commit()
+        conn.close()
+
+        # ১. অটো ইমেইল ট্র্রিগার
+        subject = f"LFM Order Update - #{order_id}"
+        body = f"প্রিয় {order[2]},\nআপনার অর্ডার #{order_id} এর বর্তমান স্ট্যাটাস: {status}।"
+        send_auto_email(order[4], subject, body)
+
+        # ২. ডিরেক্ট হোয়াটসঅ্যাপ মেসেজ লিঙ্ক
+        wa_message = f"🔥 *LFM Order Update* 🔥\n\nপ্রিয় {order[2]},\nআপনার অর্ডার #{order_id} এর বর্তমান স্ট্যাটাস: *{status}*!\n\nধন্যবাদ,\nLFM Team"
         encoded_msg = urllib.parse.quote(wa_message)
-        wa_url = f"https://wa.me/88{order['phone']}?text={encoded_msg}"
+        wa_url = f"https://wa.me/88{order[3]}?text={encoded_msg}"
         
         return redirect(wa_url)
 
+    conn.close()
     return redirect(url_for('admin_panel'))
 
-# ==================== ৪. ম্যানেজার প্যানেল (দালাল/অ্যাফিলিয়েট) ====================
+# ==================== ৬. ম্যানেজার প্যানেল (দালাল / অ্যাফিলিয়েট) ====================
 @app.route('/manager')
 def manager_panel():
-    mng_id = "MNG101" # উদাহরণ হিসেবে আইডি
-    mng_info = managers.get(mng_id)
-    return render_template('manager.html', mng_id=mng_id, info=mng_info, products=products)
+    mng_id = "MNG101" # উদাহরণস্বরূপ
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM managers WHERE mng_id = ?", (mng_id,))
+    info = cursor.fetchone()
+    cursor.execute("SELECT * FROM products")
+    products = cursor.fetchall()
+    conn.close()
+    return render_template('manager.html', mng_id=mng_id, info=info, products=products)
 
-# ==================== ৫. কন্ট্রোলার প্যানেল (মাস্টার কন্ট্রোল) ====================
+# ==================== ৭. সুপার কন্ট্রোল প্যানেল (Owner Control) ====================
 @app.route('/controller')
 def controller_panel():
-    total_sales = sum(o['price'] for o in orders if o['status'] in ['Approved', 'Done'])
-    return render_template('controller.html', managers=managers, orders=orders, total_sales=total_sales)
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM managers")
+    managers = cursor.fetchall()
+    cursor.execute("SELECT * FROM orders")
+    orders = cursor.fetchall()
+    conn.close()
+    return render_template('controller.html', managers=managers, orders=orders)
 
 if __name__ == '__main__':
     app.run(debug=True)
