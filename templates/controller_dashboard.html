@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controller Panel - LFM Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; }
+        .card { background-color: #1e293b; border: 1px solid #334155; }
+        .form-control { background-color: #0f172a; border: 1px solid #334155; color: #fff; }
+    </style>
+</head>
+<body class="p-3">
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><span class="text-danger">Super Controller</span> Panel</h2>
+        <a href="/logout" class="btn btn-outline-danger btn-sm">লগআউট</a>
+    </div>
+
+    <!-- Admin Approvals Section -->
+    <div class="card p-3 mb-4">
+        <h5 class="text-warning">পেন্ডিং অ্যাডমিন রিকোয়েস্ট (Pending Admins)</h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>নাম</th><th>ইউজারনাম</th><th>মোবাইল</th><th>ইমেইল</th><th>অ্যাকশন</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in pending_admins %}
+                    <tr>
+                        <td>{{ a.full_name }}</td>
+                        <td>{{ a.username }}</td>
+                        <td>{{ a.mobile }}</td>
+                        <td>{{ a.email }}</td>
+                        <td>
+                            <form action="/controller/approve_admin/{{ a.id }}" method="POST">
+                                <button type="submit" class="btn btn-success btn-sm">Approve Admin</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-secondary">কোনো পেন্ডিং রিকোয়েস্ট নেই।</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Site Settings Form (Social Links) -->
+    <div class="card p-3 mb-4">
+        <h5 class="text-info">সোশ্যাল মিডিয়া ও কন্টাক্ট লিংক সেটিংস</h5>
+        <form action="/controller/settings/update" method="POST">
+            <div class="row g-2">
+                <div class="col-md-6"><label>Facebook Page Link</label><input type="text" name="facebook_page" value="{{ settings.facebook_page }}" class="form-control"></div>
+                <div class="col-md-6"><label>Messenger Link</label><input type="text" name="messenger_link" value="{{ settings.messenger_link }}" class="form-control"></div>
+                <div class="col-md-6"><label>WhatsApp Number</label><input type="text" name="whatsapp_number" value="{{ settings.whatsapp_number }}" class="form-control"></div>
+                <div class="col-md-6"><label>YouTube Channel</label><input type="text" name="youtube_channel" value="{{ settings.youtube_channel }}" class="form-control"></div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">লিংকগুলো সেভ করুন</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
