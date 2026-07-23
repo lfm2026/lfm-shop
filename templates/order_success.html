@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Success</title>
+    <style>
+        body { background: #0A0A0F; color: #fff; font-family: sans-serif; text-align: center; padding: 50px 20px; }
+        .box { border: 1px solid #D4AF37; padding: 30px; display: inline-block; border-radius: 10px; max-width: 400px; }
+        .btn { background: #25D366; color: #fff; padding: 12px 20px; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2 style="color: #D4AF37;">অর্ডার সফল হয়েছে!</h2>
+        <p>অর্ডার নম্বর: {{ order.id }}</p>
+        <p>মোট টাকা: ৳{{ order.total_price }}</p>
+        <hr>
+        <p>সরাসরি হোয়াটসঅ্যাপে এডমিনকে মেসেজ পাঠাতে নিচের বাটনে ক্লিক করুন:</p>
+        <a href="{{ whatsapp_url }}" class="btn">WhatsApp এ মেসেজ পাঠান</a><br><br>
+        <a href="/" style="color: #D4AF37;">হোম পেজে ফিরে যান</a>
+    </div>
+</body>
+</html>
