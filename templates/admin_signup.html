@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>অ্যাডমিন রেজিস্ট্রেশন - LFM Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: sans-serif; }
+        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; }
+        .form-control { background-color: #0f172a; border: 1px solid #334155; color: #fff; }
+        .form-control:focus { background-color: #0f172a; color: #fff; border-color: #3b82f6; box-shadow: none; }
+    </style>
+</head>
+<body class="d-flex align-items-center min-vh-100 py-4">
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card p-4 shadow-lg">
+                <h3 class="text-center text-primary mb-4 fw-bold">Admin Registration</h3>
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form action="{{ url_for('admin_signup') }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label text-light">পুরো নাম</label>
+                        <input type="text" name="full_name" class="form-control" placeholder="আপনার নাম" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-light">ইউজারনাম</label>
+                        <input type="text" name="username" class="form-control" placeholder="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-light">ইমেইল</label>
+                        <input type="email" name="email" class="form-control" placeholder="email@example.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-light">মোবাইল নম্বর</label>
+                        <input type="text" name="mobile" class="form-control" placeholder="018XXXXXXXX" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-light">পাসওয়ার্ড</label>
+                        <input type="password" name="password" class="form-control" placeholder="******" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2 mt-2">সাইনআপ রিকোয়েস্ট পাঠান</button>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('home') }}" class="text-secondary text-decoration-none">হোম পেজে ফিরে যান</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
