@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Controller Dashboard - LFM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { background: #0A0A0F; color: #fff; font-family: 'Hind Siliguri', sans-serif; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1, h3 { color: #D4AF37; font-family: 'Orbitron', sans-serif; }
+        .card { background: rgba(255,255,255,0.05); border: 1px solid #D4AF37; padding: 20px; border-radius: 8px; margin-bottom: 25px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #C0C0C0; font-weight: 600; }
+        input[type="text"] { width: 100%; padding: 10px; background: #000; border: 1px solid #D4AF37; color: #fff; border-radius: 5px; box-sizing: border-box; }
+        .btn { background: #D4AF37; color: #000; padding: 10px 20px; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; text-decoration: none; display: inline-block; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid rgba(212,175,55,0.3); padding: 10px; text-align: left; }
+        th { background: rgba(212,175,55,0.2); color: #D4AF37; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>CONTROLLER CONTROL CENTER</h1>
+            <a href="/" class="btn">ওয়েবসাইটে যান</a>
+        </div>
+        <hr style="border-color: #D4AF37; margin: 20px 0;">
+
+        <!-- সোশ্যাল কন্টাক্ট সেটিং বক্স -->
+        <div class="card">
+            <h3><i class="fas fa-sliders-h"></i> Social & Support Contact Settings</h3><br>
+            <form action="/controller/update_settings" method="POST">
+                <div class="grid">
+                    <div class="form-group">
+                        <label><i class="fab fa-facebook" style="color:#1877F2;"></i> 1. Facebook Page URL</label>
+                        <input type="text" name="facebook_page" value="{{ settings.get('facebook_page', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fab fa-facebook-messenger" style="color:#0084FF;"></i> 2. Facebook Messenger Inbox Link</label>
+                        <input type="text" name="messenger_link" value="{{ settings.get('messenger_link', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fab fa-whatsapp" style="color:#25D366;"></i> 3. WhatsApp Inbox Number</label>
+                        <input type="text" name="whatsapp_number" value="{{ settings.get('whatsapp_number', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fab fa-tiktok" style="color:#00F2FE;"></i> 4. TikTok Profile URL</label>
+                        <input type="text" name="tiktok_link" value="{{ settings.get('tiktok_link', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fab fa-instagram" style="color:#E4405F;"></i> 5. Instagram Profile URL</label>
+                        <input type="text" name="instagram_link" value="{{ settings.get('instagram_link', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-envelope" style="color:#EA4335;"></i> 6. Support Gmail / Email</label>
+                        <input type="text" name="support_email" value="{{ settings.get('support_email', '') }}">
+                    </div>
+                </div>
+                <button type="submit" class="btn" style="margin-top: 10px;">লিংকসমূহ আপডেট করুন</button>
+            </form>
+        </div>
+
+        <!-- পেন্ডিং অ্যাডমিন অনুমোদন সেকশন -->
+        <div class="card">
+            <h3><i class="fas fa-user-shield"></i> Pending Admin Approval Requests</h3>
+            <table>
+                <tr>
+                    <th>নাম</th>
+                    <th>ইউজারনাম</th>
+                    <th>মোবাইল</th>
+                    <th>একশন</th>
+                </tr>
+                {% for a in pending_admins %}
+                <tr>
+                    <td>{{ a.full_name }}</td>
+                    <td>{{ a.username }}</td>
+                    <td>{{ a.mobile }}</td>
+                    <td>
+                        <form action="/controller/approve_admin/{{ a.id }}" method="POST">
+                            <button type="submit" class="btn" style="padding: 5px 10px; font-size: 0.8rem;">Approve</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4">কোনো পেন্ডিং অ্যাডমিন অনুনোদন নেই।</td></tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</body>
+</html>
