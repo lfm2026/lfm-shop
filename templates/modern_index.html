@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LFM Shop - Modern Store</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --bg-dark: #0f172a; --card-bg: #1e293b; --accent: #3b82f6; --text-light: #f8fafc; }
+        body { background-color: var(--bg-dark); color: var(--text-light); font-family: 'Segoe UI', system-ui, sans-serif; }
+        .navbar { background-color: var(--card-bg); border-bottom: 1px solid #334155; }
+        .product-card { background-color: var(--card-bg); border: 1px solid #334155; border-radius: 12px; transition: 0.3s; }
+        .product-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+        .product-img { height: 180px; object-fit: cover; border-top-left-radius: 12px; border-top-right-radius: 12px; }
+        .form-control, .form-select { background-color: #0f172a; border: 1px solid #334155; color: #fff; }
+        .form-control:focus, .form-select:focus { background-color: #0f172a; color: #fff; border-color: var(--accent); box-shadow: none; }
+        .badge-id { background-color: #334155; color: #38bdf8; font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top px-3">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold text-primary" href="/"><i class="fa-solid fa-bag-shopping me-2"></i>LFM Shop</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMenu">
+            <!-- Search Bar -->
+            <form action="/" method="GET" class="d-flex mx-auto my-2 my-lg-0 w-50">
+                <input class="form-control me-2" type="search" name="q" placeholder="প্রোডাক্ট নাম বা ID দিয়ে সার্চ করুন (যেমন: VAR-RED-S-1029)...">
+                <button class="btn btn-outline-primary" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </form>
+            
+            <div class="d-flex align-items-center gap-2">
+                {% if current_user %}
+                    <a href="/profile/{{ current_user.username }}" class="btn btn-outline-light btn-sm"><i class="fa-solid fa-user me-1"></i>{{ current_user.username }}</a>
+                    <a href="/logout" class="btn btn-danger btn-sm"><i class="fa-solid fa-right-from-bracket"></i></a>
+                {% else %}
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#loginModal">লগইন / সাইনআপ</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Container -->
+<div class="container my-4">
+    <!-- Category Filter -->
+    <div class="d-flex gap-2 overflow-auto pb-3 mb-3">
+        <a href="/" class="btn btn-sm btn-secondary text-nowrap">সব ক্যাটাগরি</a>
+        {% for cat in categories %}
+            <a href="/?category={{ cat }}" class="btn btn-sm btn-outline-secondary text-nowrap">{{ cat }}</a>
+        {% endfor %}
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Products Grid -->
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+        {% for p in products %}
+        <div class="col">
+            <div class="card product-card h-100">
+                {% set pics = p.pic_urls.split(',') %}
+                <img src="{{ pics[0] }}" class="card-img-top product-img" alt="Product">
+                <div class="card-body p-2 d-flex flex-column">
+                    <span class="badge badge-id mb-1 w-auto align-self-start">{{ p.id }}</span>
+                    <h6 class="card-title text-truncate mb-1">{{ p.product.name }}</h6>
+                    <div class="small text-secondary mb-2">
+                        <span>কালার: <strong>{{ p.color }}</strong></span> | 
+                        <span>সাইজ: <strong>{{ p.size }}</strong></span>
+                    </div>
+                    <div class="fw-bold text-warning mb-2">{{ p.price }} ৳</div>
+                    
+                    <div class="mt-auto d-grid gap-1">
+                        <form action="/cart/add/{{ p.id }}" method="POST">
+                            <button type="submit" class="btn btn-sm btn-outline-info w-100"><i class="fa-solid fa-cart-plus me-1"></i>কার্টে রাখুন</button>
+                        </form>
+                        <button class="btn btn-sm btn-primary w-100" data-bs-toggle="modal" data-bs-target="#buyModal{{ p.id }}">এখনই কিনুন</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buy Modal -->
+        <div class="modal fade" id="buyModal{{ p.id }}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-dark text-light border-secondary">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title">{{ p.product.name }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form action="/order/place" method="POST">
+                        <div class="modal-body">
+                            <input type="hidden" name="variant_id" value="{{ p.id }}">
+                            <p class="text-info">Product ID: <code>{{ p.id }}</code></p>
+                            <p>মূল্য: <strong>{{ p.price }} ৳</strong></p>
+                            <div class="mb-3">
+                                <label class="form-label">পরিমাণ (Quantity)</label>
+                                <input type="number" name="quantity" value="1" min="1" class="form-control" required>
+                            </div>
+                            {% if not current_user or not current_user.village %}
+                            <div class="mb-2"><input type="text" name="village" class="form-control" placeholder="গ্রাম / এলাকা" required></div>
+                            <div class="mb-2"><input type="text" name="thana" class="form-control" placeholder="থানা" required></div>
+                            <div class="mb-2"><input type="text" name="district" class="form-control" placeholder="জেলা" required></div>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer border-secondary">
+                            <button type="submit" class="btn btn-success w-100">অর্ডার নিশ্চিত করুন</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Footer / Social Links (Driven by Controller) -->
+<footer class="bg-dark text-center text-light py-4 mt-5 border-top border-secondary">
+    <div class="container">
+        <h6>আমাদের সাথে যোগাযোগ করুন</h6>
+        <div class="d-flex justify-content-center gap-3 my-3">
+            <a href="{{ settings.facebook_page }}" class="btn btn-outline-primary btn-sm"><i class="fa-brands fa-facebook"></i></a>
+            <a href="{{ settings.messenger_link }}" class="btn btn-outline-info btn-sm"><i class="fa-brands fa-facebook-messenger"></i></a>
+            <a href="https://wa.me/{{ settings.whatsapp_number }}" class="btn btn-outline-success btn-sm"><i class="fa-brands fa-whatsapp"></i></a>
+            <a href="{{ settings.youtube_channel }}" class="btn btn-outline-danger btn-sm"><i class="fa-brands fa-youtube"></i></a>
+        </div>
+        <p class="small text-secondary mb-0">© 2026 LFM Shop. All Rights Reserved.</p>
+    </div>
+</footer>
+
+<!-- Login/Signup Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <div class="modal-body p-4">
+                <ul class="nav nav-pills nav-justified mb-3" id="pills-tab">
+                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#loginTab">লগইন</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#signupTab">সাইনআপ</button></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="loginTab">
+                        <form action="/login" method="POST">
+                            <div class="mb-3"><input type="text" name="login_id" class="form-control" placeholder="ইউজারনাম / মোবাইল" required></div>
+                            <div class="mb-3"><input type="password" name="password" class="form-control" placeholder="পাসওয়ার্ড" required></div>
+                            <button type="submit" class="btn btn-primary w-100">লগইন</button>
+                        </form>
+                    </div>
+                    <div class="tab-pane fade" id="signupTab">
+                        <form action="/signup" method="POST">
+                            <div class="mb-2"><input type="text" name="full_name" class="form-control" placeholder="পুরো নাম" required></div>
+                            <div class="mb-2"><input type="text" name="username" class="form-control" placeholder="ইউজারনাম" required></div>
+                            <div class="mb-2"><input type="email" name="email" class="form-control" placeholder="ইমেইল" required></div>
+                            <div class="mb-2"><input type="text" name="mobile" class="form-control" placeholder="মোবাইল নম্বর" required></div>
+                            <div class="mb-2"><input type="password" name="password" class="form-control" placeholder="পাসওয়ার্ড" required></div>
+                            <button type="submit" class="btn btn-success w-100">অ্যাকাউন্ট খুলুন</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
