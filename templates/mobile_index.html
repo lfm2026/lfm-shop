@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head><title>LFM Lite</title></head>
+<body style="background:#000; color:#fff; padding:10px;">
+    <h2 style="color:#D4AF37;">LFM SHOP</h2>
+    {% if current_user %}
+        <p>User: {{ current_user.full_name }} | <a href="/logout" style="color:red;">Logout</a></p>
+    {% else %}
+        <form action="/login" method="POST">
+            <input type="text" name="login_id" placeholder="User/Mobile"><br>
+            <input type="password" name="password" placeholder="Password"><br>
+            <input type="submit" value="Login">
+        </form>
+    {% endif %}
+    <hr>
+    {% for p in products %}
+        <div style="border:1px solid #D4AF37; padding:8px; margin-bottom:8px;">
+            <b>{{ p.product.name }}</b><br>
+            ID: {{ p.id }} | Price: {{ p.price }} TK<br>
+            Color: {{ p.color }} | Size: {{ p.size }}<br>
+            {% if current_user %}
+                <form action="/order" method="POST">
+                    <input type="hidden" name="variant_id" value="{{ p.id }}">
+                    <input type="submit" value="Buy Now">
+                </form>
+            {% endif %}
+        </div>
+    {% endfor %}
+</body>
+</html>
