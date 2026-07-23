@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>LFM Shop - Lite</title>
+</head>
+<body bgcolor="#111827" text="#FFFFFF" link="#3B82F6" vlink="#93C5FD">
+    <!-- Header -->
+    <table width="100%" bgcolor="#1E293B" cellpadding="5">
+        <tr>
+            <td><font size="4" color="#22C55E"><b>LFM Shop (Lite)</b></font></td>
+            <td align="right">
+                {% if session.get('user_id') %}
+                    <a href="/logout"><font color="#EF4444">Logout</font></a>
+                {% else %}
+                    <b>Login below</b>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+    <hr size="1" color="#334155">
+
+    <!-- Search Form -->
+    <form action="/" method="GET">
+        <table width="100%">
+            <tr>
+                <td>Search ID/Name:</td>
+                <td><input type="text" name="q" size="12"></td>
+                <td><input type="submit" value="Search"></td>
+            </tr>
+        </table>
+    </form>
+    <hr size="1" color="#334155">
+
+    <!-- Login/Signup for Non-Logged Users -->
+    {% if not session.get('user_id') %}
+    <table width="100%" bgcolor="#1E293B" cellpadding="5">
+        <tr><td><b>Login</b></td></tr>
+        <tr>
+            <td>
+                <form action="/login" method="POST">
+                    User/Mobile: <br><input type="text" name="login_id"><br>
+                    Pass: <br><input type="password" name="password"><br>
+                    <input type="submit" value="Login">
+                </form>
+            </td>
+        </tr>
+    </table>
+    <hr size="1" color="#334155">
+    {% endif %}
+
+    <!-- Products List -->
+    <b><u>Products List</u></b><br><br>
+    {% for p in products %}
+    <table width="100%" bgcolor="#1E293B" cellpadding="5" border="1" borderColor="#334155">
+        <tr>
+            <td width="30%">
+                {% set pics = p.pic_urls.split(',') %}
+                <img src="{{ pics[0] }}" width="60" height="60" alt="Pic">
+            </td>
+            <td>
+                <font color="#38BDF8"><b>{{ p.product.name }}</b></font><br>
+                <font color="#FACC15">ID: {{ p.id }}</font><br>
+                Color: {{ p.color }} | Size: {{ p.size }}<br>
+                Price: <b>{{ p.price }} Tk</b><br>
+                
+                <form action="/cart/add/{{ p.id }}" method="POST">
+                    <input type="submit" value="Add to Cart">
+                </form>
+                <form action="/order/place" method="POST">
+                    <input type="hidden" name="variant_id" value="{{ p.id }}">
+                    <input type="submit" value="Buy Now">
+                </form>
+            </td>
+        </tr>
+    </table>
+    <br>
+    {% endfor %}
+
+    <!-- Social Links (Managed by Controller) -->
+    <hr size="1" color="#334155">
+    <table width="100%" bgcolor="#0F172A" cellpadding="4">
+        <tr><td align="center"><b>Contact Us</b></td></tr>
+        <tr>
+            <align="center">
+                <a href="{{ settings.facebook_page }}">Facebook</a> | 
+                <a href="{{ settings.messenger_link }}">Messenger</a> | 
+                <a href="https://wa.me/{{ settings.whatsapp_number }}">WhatsApp</a>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
