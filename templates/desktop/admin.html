@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LFM Shop - Admin Panel</title>
+    <link rel="stylesheet" href="/static/css/main_toffee.css">
+</head>
+<body class="toffee-theme">
+    <header class="navbar">
+        <div class="logo">LFM ADMIN</div>
+        <div>
+            <a href="/" style="color:#fff;">View Website</a>
+        </div>
+    </header>
+
+    <main class="container" style="padding:20px;">
+        <h2>প্রোডাক্ট আপলোড ফর্ম</h2>
+        <form id="productForm" action="/admin/upload-product" method="POST" style="background:#1E0038; padding:20px; border-radius:10px;">
+            <label>প্রোডাক্ট নাম:</label><br>
+            <input type="text" name="title" required style="width:100%; margin-bottom:10px;"><br>
+
+            <label>ক্যাটাগরি/টাইপ:</label><br>
+            <input type="text" name="category" placeholder="T-Shirt / Pant / Shoe" required style="width:100%; margin-bottom:10px;"><br>
+
+            <label>এভেলেবল কালার (কমা দিয়ে লিখুন):</label><br>
+            <input type="text" name="colors" placeholder="Red, Blue, Black" required style="width:100%; margin-bottom:10px;"><br>
+
+            <label>এভেলেবল সাইজ (কমা দিয়ে লিখুন):</label><br>
+            <input type="text" name="sizes" placeholder="S, M, L, XL" required style="width:100%; margin-bottom:10px;"><br>
+
+            <label>স্টক সংখ্যা:</label><br>
+            <input type="number" name="stock" required style="width:100%; margin-bottom:10px;"><br>
+
+            <label>মূল্য (৳):</label><br>
+            <input type="number" name="price" required style="width:100%; margin-bottom:10px;"><br>
+
+            <label>ছবি URL (কমা দিয়ে একাধিক লিংক দিতে পারেন):</label><br>
+            <input type="text" name="pic_urls" required style="width:100%; margin-bottom:10px;"><br>
+
+            <label>ভিডিও URL (অপশনাল):</label><br>
+            <input type="text" name="video_urls" style="width:100%; margin-bottom:15px;"><br>
+
+            <button type="submit" id="submitBtn" class="btn-buy" style="width:100%;">প্রোডাক্ট আপলোড করুন</button>
+        </form>
+    </main>
+
+    <script>
+        // ডাবল আপলোড প্রতিরোধ লজিক (Pending state showing)
+        document.getElementById('productForm').addEventListener('submit', function() {
+            var btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = 'অপেক্ষা করুন... Upload Pending...';
+        });
+    </script>
+</body>
+</html>
