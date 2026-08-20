@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Inbox & Order Tracking - LFM Shop</title>
+    <link rel="stylesheet" href="/static/css/main_toffee.css">
+    <style>
+        .inbox-container { max-width: 800px; margin: auto; padding: 20px; }
+        .order-card { background: #1E0038; border: 1px solid #3A0066; border-radius: 10px; padding: 15px; margin-bottom: 15px; }
+        .status-badge { padding: 5px 10px; border-radius: 5px; font-weight: bold; display: inline-block; }
+        .status-Pending { background: #ff9800; color: #000; }
+        .status-Approved { background: #2196F3; color: #fff; }
+        .status-On-Road { background: #9c27b0; color: #fff; }
+        .status-Delivered { background: #4CAF50; color: #fff; }
+        .btn-receive { background: #FFD700; color: #000; border: none; padding: 8px 15px; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+        /* Security Lock Modal */
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: #2D004D; padding: 25px; border-radius: 10px; text-align: center; border: 2px solid #FFD700; max-width: 350px; width: 90%; }
+    </style>
+</head>
+<body class="toffee-theme">
+    <header class="navbar">
+        <div class="logo"><a href="/" style="color:#FFD700; text-decoration:none;">LFM SHOP</a></div>
+        <div><a href="/user/inbox" style="color:#fff;">📥 My Orders</a></div>
+    </header>
+
+    <div class="inbox-container">
+        <h2>আপনার অর্ডার ও ইনবক্স</h2>
+        
+        {% if not orders %}
+            <p>আপনার কোনো একটিভ অর্ডার নেই।</p>
+        {% endif %}
+
+        {% for order in orders %}
+        <div class="order-card">
+            <h3>অর্ডার আইডি: {{ order.order_id }}</h3>
+            <p>প্রোডাক্ট আইডি: <b>{{ order.product_id }}</b></p>
+            <p>পরিমাণ: {{ order.quantity }} টি | কালার: {{ order.color }} | সাইজ: {{ order.size }}</p>
+            <p>বর্তমান স্ট্যাটাস: <span class="status-badge status-{{ order.status.replace(' ', '-') }}">{{ order.status }}</span></p>
+
+            {% if order.status == 'On Road' or order.status == 'Approved' %}
+                <button class="btn-receive" onclick="openSecurityModal('{{ order.order_id }}')">পণ্য রিসিভ করেছি (ভেরিফাই করুন)</button>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- সিকিউরিটি লকিং পপ-আপ -->
+    <div id="securityModal" class="modal">
+        <div class="modal-content">
+            <h3 style="color:#FFD700;">সিকিউরিটি ভেরিফিকেশন</h3>
+            <p style="font-size: 13px;">পণ্য রিসিভ নিশ্চিত করতে আপনার ডিভাইসের সিকিউরিটি লক / পিন অথবা ফিঙ্গারপ্রিন্ট ব্যবহার করুন।</p>
+            <input type="password" id="userPin" placeholder="Enter Lock PIN / Password" style="width: 80%; padding: 8px; margin: 10px 0;">
+            <br>
+            <button class="btn-receive" onclick="confirmDelivery()">কনফার্ম করুন</button>
+            <button onclick="closeModal()" style="background: transparent; color:#fff; border:none; margin-top:10px; cursor:pointer;">বাতিল</button>
+        </div>
+    </div>
+
+    <script>
+        let currentOrderId = '';
+        function openSecurityModal(orderId) {
+            currentOrderId = orderId;
+            document.getElementById('securityModal').style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('securityModal').style.display = 'none';
+        }
+        function confirmDelivery() {
+            var pin = document.getElementById('userPin').value;
+            if(!pin) {
+                alert("অনুগ্রহ করে সিকিউরিটি পিন দিন!");
+                return;
+            }
+            alert("ভেরিফিকেশন সফল হয়েছে! ধন্যবাদ।");
+            closeModal();
+            // ব্যাকএন্ডে স্ট্যাটাস আপডেটের কল যাবে
+        }
+    </script>
+</body>
+</html>
