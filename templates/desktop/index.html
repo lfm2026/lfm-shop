@@ -1,1 +1,116 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LFM Shop - Loop For Money</title>
+    <link rel="stylesheet" href="/static/css/main_toffee.css">
+</head>
+<body class="toffee-theme">
 
+    <!-- Header Navigation Bar -->
+    <header class="navbar">
+        <div class="logo"><a href="/" style="color:#FFD700; text-decoration:none;">LFM SHOP</a></div>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="পণ্যের নাম বা স্পেশাল ইউনিক ID দিয়ে খুঁজুন..." onkeyup="filterProducts()">
+        </div>
+        <div class="nav-links">
+            <a href="/user/inbox" class="nav-btn">📥 ইনবক্স</a>
+        </div>
+    </header>
+
+    <!-- Robi App Style Top Selling Hero Banner -->
+    <section class="hero-banner">
+        <div class="banner-card">
+            <span class="badge-hot">🔥 TOP SELLING OFFER</span>
+            <h1>LFM Exclusive Apparel Line</h1>
+            <p>💡 ১ কেজি ওজনের ভেতর একাধিক পণ্য যোগ করলে কোনো **অতিরিক্ত কুরিয়ার চার্জ** লাগবে না!</p>
+        </div>
+    </section>
+
+    <!-- Product Display Grid -->
+    <main class="container">
+        <h2 class="section-title">আমাদের কালেকশন</h2>
+        <div class="product-grid" id="productGrid">
+            {% for product in products %}
+            <div class="product-card" data-title="{{ product.title|lower }}" data-id="{{ product.product_id|lower }}">
+                <div class="img-wrapper">
+                    <img src="{{ product.pic_urls[0] }}" alt="{{ product.title }}">
+                </div>
+                <h3>{{ product.title }}</h3>
+                <p class="product-id">ID: {{ product.product_id }}</p>
+                <div class="price-row">
+                    <span class="price">৳ {{ product.price }}</span>
+                    <span class="stock-info">স্টক: {{ product.stock }} টি</span>
+                </div>
+                <a href="/product/{{ product.product_id }}" class="btn-buy">বিস্তারিত ও অর্ডার</a>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <!-- Floating LFM Neo AI Chat Widget -->
+    <div class="ai-widget-container">
+        <div class="ai-chat-box" id="aiChatBox">
+            <div class="chat-header">
+                <span>🤖 Chat with LFM Neo</span>
+                <span onclick="toggleChat()" style="cursor:pointer;">✖</span>
+            </div>
+            <div class="chat-body" id="chatBody">
+                <div class="msg ai-msg">আসসালামু আলাইকুম! আমি LFM Neo AI। অর্ডার, সাপোর্ট বা পলিসি সম্পর্কে কোনো প্রশ্ন থাকলে মেসেজ দিন!</div>
+            </div>
+            <div class="chat-footer">
+                <input type="text" id="aiInput" placeholder="মেসেজ লিখুন...">
+                <button onclick="sendAiMessage()">Send</button>
+            </div>
+        </div>
+        <div class="ai-toggle-btn" onclick="toggleChat()">
+            💬 Chat with LFM Neo
+        </div>
+    </div>
+
+    <script>
+        // ডাইনামিক লাইভ ফিল্টারিং ও সার্চ
+        function filterProducts() {
+            let q = document.getElementById('searchInput').value.toLowerCase().trim();
+            let cards = document.querySelectorAll('.product-card');
+            cards.forEach(card => {
+                let title = card.getAttribute('data-title');
+                let pid = card.getAttribute('data-id');
+                if (title.includes(q) || pid.includes(q)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // AI Widget Toggle & Chat Functionality
+        function toggleChat() {
+            let box = document.getElementById('aiChatBox');
+            box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function sendAiMessage() {
+            let input = document.getElementById('aiInput');
+            let msg = input.value.trim();
+            if(!msg) return;
+
+            let body = document.getElementById('chatBody');
+            body.innerHTML += `<div class="msg user-msg">${msg}</div>`;
+            input.value = '';
+
+            fetch('/api/ai-chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: msg})
+            })
+            .then(res => res.json())
+            .then(data => {
+                body.innerHTML += `<div class="msg ai-msg">${data.reply}</div>`;
+                body.scrollTop = body.scrollHeight;
+            });
+        }
+    </script>
+</body>
+</html>
