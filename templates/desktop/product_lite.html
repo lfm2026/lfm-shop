@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ product.title }} - LFM Lite</title>
+    <style>
+        body { font-family: sans-serif; background: #fff; color: #000; margin: 5px; }
+        .header { background: #4B0082; color: #fff; padding: 5px; text-align: center; }
+        .badge { background: #D4AF37; padding: 2px 5px; font-weight: bold; }
+        .price { color: red; font-size: 18px; font-weight: bold; }
+        .btn-submit { background: #4B0082; color: #fff; padding: 5px 10px; font-weight: bold; border: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h3>LFM Shop (Lite)</h3>
+    </div>
+    <a href="/">← হোমপেজে ফিরে যান</a>
+    <hr>
+
+    <h3>{{ product.title }}</h3>
+    <p>প্রোডাক্ট ID: <span class="badge">{{ product.product_id }}</span></p>
+    <p class="price">মূল্য: ৳{{ product.price }}</p>
+    <p>কালার: {{ product.color }} | সাইজ: {{ product.size }}</p>
+    <hr>
+
+    <h4>অর্ডার ফর্ম:</h4>
+    <form action="/checkout" method="POST">
+        <input type="hidden" name="product_id" value="{{ product.product_id }}">
+        <input type="hidden" name="color" value="{{ product.color }}">
+        <input type="hidden" name="size" value="{{ product.size }}">
+
+        পরিমাণ:<br>
+        <input type="number" name="quantity" value="1"><br><br>
+
+        নাম:<br>
+        <input type="text" name="name" required><br><br>
+
+        মোবাইল নম্বর:<br>
+        <input type="text" name="phone" required><br><br>
+
+        ঠিকানা:<br>
+        <textarea name="address" required></textarea><br><br>
+
+        <input type="submit" class="btn-submit" value="অর্ডার সাবমিট করুন">
+    </form>
+</body>
+</html>
