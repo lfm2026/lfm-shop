@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>GoNio Admin Panel</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { display: flex; height: 100vh; background: #1e1e2e; color: white; }
+        .nav { width: 220px; background: #181825; padding: 15px; }
+        .nav button { width: 100%; padding: 12px; margin-bottom: 10px; background: #313244; color: white; border: none; border-radius: 5px; cursor: pointer; text-align: left; }
+        .badge { background: #f38ba8; color: black; padding: 2px 6px; border-radius: 50%; font-size: 12px; font-weight: bold; margin-left: 5px; }
+        .content { flex: 1; padding: 20px; overflow-y: auto; }
+        .card { background: #313244; padding: 15px; margin-bottom: 10px; border-radius: 5px; cursor: pointer; }
+        .chat-bubble { padding: 8px 12px; margin: 5px 0; border-radius: 5px; }
+        .user-bg { background: #89b4fa; color: black; }
+        .bot-bg { background: #45475a; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="nav">
+    <h2>GoNio Admin</h2><br>
+    <button onclick="showTab('folders')">📁 Customer Folders</button>
+    <button onclick="showTab('reports')">🚨 Reports <span id="reportBadge" class="badge" style="display:none;">0</span></button>
+</div>
+
+<div class="content" id="mainContent">
+    <h3>ফোল্ডার বা রিপোর্ট নির্বাচন করুন।</h3>
+</div>
+
+<script>
+    async function updateBadge() {
+        const res = await fetch('/admin/api/reports');
+        const data = await res.json();
+        const badge = document.getElementById('reportBadge');
+        if (data.pending_count > 0) {
+            badge.innerText = data.pending_count;
+            badge.style.display = 'inline';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    async function showTab(tab) {
+        const content = document.getElementById('mainContent');
+        if (tab === 'folders') {
+            const res = await fetch('/admin/api/folders');
+            const folders = await res.json();
+            content.innerHTML = '<h2>Customer Mobile Folders</h2><br>';
+            folders.forEach(f => {
+                content.innerHTML += `
+                    <div class="card" onclick="viewFolder('${f.mobile}')">
+                        <b>📱 Mobile: ${f.mobile}</b><br>
+                        <small>Total Messages: ${f.messages}</small>
+                    </div>
+                `;
+            });
+        } else if (tab === 'reports') {
+            const res = await fetch('/admin/api/reports');
+            const data = await res.json();
+            content.innerHTML = '<h2>User Reports & Tickets</h2><br>';
+            data.reports.forEach(r => {
+                content.innerHTML += `
+                    <div class="card" style="border-left: 5px solid ${r.status === 'pending' ? '#f38ba8' : '#a6e3a1'};">
+                        <b>User/Mobile:</b> ${r.mobile}<br>
+                        <b>Issue:</b> ${r.issue}<br>
+                        <b>Status:</b> ${r.status}<br>
+                        ${r.reply ? `<p><b>Your Reply:</b> ${r.reply}</p>` : `
+                            <br>
+                            <input type="text" id="reply_${r.id}" placeholder="ইউজারকে উত্তর দিন..." style="padding:5px; width:70%;">
+                            <button onclick="sendReply(${r.id})" style="padding:5px 10px; background:#a6e3a1; border:none; cursor:pointer;">Send Reply</button>
+                        `}
+                    </div>
+                `;
+            });
+        }
+    }
+
+    async function viewFolder(mobile) {
+        const content = document.getElementById('mainContent');
+        const res = await fetch(`/admin/api/folder/${mobile}`);
+        const chats = await res.json();
+        content.innerHTML = `<h2>Chat History: ${mobile}</h2><br>`;
+        chats.forEach(c => {
+            content.innerHTML += `
+                <div class="chat-bubble ${c.sender === 'user' ? 'user-bg' : 'bot-bg'}">
+                    <small>[${c.platform}] <b>${c.sender}:</b></small>
+                    <p>${c.message}</p>
+                </div>
+            `;
+        });
+    }
+
+    async function sendReply(reportId) {
+        const replyText = document.getElementById(`reply_${reportId}`).value;
+        if (!replyText) return;
+
+        await fetch('/admin/api/report/reply', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ report_id: reportId, reply: replyText })
+        });
+        alert('উত্তর পাঠানো হয়েছে!');
+        updateBadge();
+        showTab('reports');
+    }
+
+    setInterval(updateBadge, 5000);
+    updateBadge();
+    showTab('folders');
+</script>
+</body>
+</html>
