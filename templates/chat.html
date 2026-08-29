@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loop For Money — AI Assistant</title>
+    <style>
+        /* --- DARK MODE (Default): সম্পূর্ণ কালো ব্যাকগ্রাউন্ড ও সাদা টেক্সট --- */
+        :root {
+            --bg-color: #000000;
+            --chat-bg: #000000;
+            --header-bg: #000000;
+            --header-text: #ffffff;
+            --msg-box-bg: #000000;
+            --bot-msg-bg: #111111;
+            --bot-msg-text: #ffffff;
+            --bot-msg-border: #333333;
+            --user-msg-bg: #222222;
+            --user-msg-text: #ffffff;
+            --input-bg: #000000;
+            --input-field-bg: #111111;
+            --text-color: #ffffff;
+            --border-color: #333333;
+            --subtext-color: #aaaaaa;
+        }
+
+        /* --- LIGHT MODE: সাদা ব্যাকগ্রাউন্ড ও কালো টেক্সট --- */
+        [data-theme="light"] {
+            --bg-color: #ffffff;
+            --chat-bg: #ffffff;
+            --header-bg: #ffffff;
+            --header-text: #000000;
+            --msg-box-bg: #ffffff;
+            --bot-msg-bg: #f1f3f5;
+            --bot-msg-text: #000000;
+            --bot-msg-border: #cccccc;
+            --user-msg-bg: #000000;
+            --user-msg-text: #ffffff;
+            --input-bg: #ffffff;
+            --input-field-bg: #f1f3f5;
+            --text-color: #000000;
+            --border-color: #cccccc;
+            --subtext-color: #666666;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 480px;
+            height: 90vh;
+            background: var(--chat-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.05);
+        }
+
+        /* --- Header Section --- */
+        .chat-header {
+            background-color: var(--header-bg);
+            color: var(--header-text);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .brand-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            background: var(--header-text);
+            color: var(--header-bg);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        .brand-details h1 {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .brand-details p {
+            font-size: 10px;
+            color: var(--subtext-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .theme-toggle-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--header-text);
+            padding: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- Chat Messages Area --- */
+        .chat-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background-color: var(--msg-box-bg);
+        }
+
+        .message {
+            max-width: 82%;
+            padding: 12px 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            border-radius: 4px;
+            word-wrap: break-word;
+        }
+
+        .bot-msg {
+            background-color: var(--bot-msg-bg);
+            color: var(--bot-msg-text);
+            align-self: flex-start;
+            border: 1px solid var(--bot-msg-border);
+            border-left: 3px solid var(--text-color);
+        }
+
+        .user-msg {
+            background-color: var(--user-msg-bg);
+            color: var(--user-msg-text);
+            align-self: flex-end;
+            border: 1px solid var(--border-color);
+        }
+
+        .msg-time {
+            font-size: 9px;
+            margin-top: 6px;
+            display: block;
+            text-align: right;
+            opacity: 0.7;
+        }
+
+        /* --- Input Section --- */
+        .chat-input-container {
+            padding: 15px 20px;
+            background-color: var(--input-bg);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .chat-input-form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--input-field-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 4px 6px 4px 14px;
+        }
+
+        .chat-input-form input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 14px;
+            color: var(--text-color);
+            padding: 8px 0;
+        }
+
+        .chat-input-form button {
+            background-color: var(--text-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 2px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 10px;
+            color: var(--subtext-color);
+            margin-top: 8px;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <!-- Header -->
+    <div class="chat-header">
+        <div class="brand-info">
+            <div class="brand-logo">LFM</div>
+            <div class="brand-details">
+                <h1>Loop For Money</h1>
+                <p>AI Support System</p>
+            </div>
+        </div>
+
+        <!-- Dark / Light Mode Toggle Icon (SVG) -->
+        <button class="theme-toggle-btn" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle Theme">
+            <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Message Area -->
+    <div class="chat-box" id="chatBox">
+        <div class="message bot-msg">
+            Loop For Money (LFM)-এ আপনাকে স্বাগতম। আমাদের প্রোডাক্ট, স্টক বা অর্ডার সংক্রান্ত যেকোনো তথ্য জানতে প্রশ্ন করুন।
+            <span class="msg-time" id="initTime"></span>
+        </div>
+    </div>
+
+    <!-- Input Form -->
+    <div class="chat-input-container">
+        <div class="chat-input-form">
+            <input type="text" id="userInput" placeholder="আপনার প্রশ্নটি লিখুন..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()" aria-label="Send Message">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+        <div class="footer-note">POWERED BY LFM AI AUTOMATION</div>
+    </div>
+</div>
+
+<script>
+    function getCurrentTime() {
+        const now = new Date();
+        return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    document.getElementById('initTime').innerText = getCurrentTime();
+
+    let isDark = true;
+    function toggleTheme() {
+        const icon = document.getElementById('themeIcon');
+        if (isDark) {
+            document.documentElement.setAttribute('data-theme', 'light');
+            icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+            isDark = false;
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            icon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+            isDark = true;
+        }
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        appendMessage(text, 'user-msg');
+        input.value = '';
+
+        try {
+            const res = await fetch('/api/chat-room', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
+            const data = await res.json();
+            appendMessage(data.reply, 'bot-msg');
+        } catch (e) {
+            appendMessage("দুঃখিত, কোনো ত্রুটি ঘটেছে। পুনরায় চেষ্টা করুন।", 'bot-msg');
+        }
+    }
+
+    function appendMessage(msg, className) {
+        const chatBox = document.getElementById('chatBox');
+        const div = document.createElement('div');
+        div.className = `message ${className}`;
+        
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'msg-time';
+        timeSpan.innerText = getCurrentTime();
+
+        div.innerText = msg;
+        div.appendChild(timeSpan);
+        
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') sendMessage();
+    }
+</script>
+
+</body>
+</html>
