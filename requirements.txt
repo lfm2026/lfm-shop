@@ -1,4 +1,5 @@
 Flask
+gunicorn
 groq
 google-genai
 libsql-client
