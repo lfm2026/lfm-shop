@@ -1,0 +1,5 @@
+Flask
+groq
+google-genai
+libsql-experimental
+requests
