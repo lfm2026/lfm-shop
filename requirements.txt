@@ -1,5 +1,5 @@
 Flask
 groq
 google-genai
-libsql-experimental
+libsql-client
 requests
