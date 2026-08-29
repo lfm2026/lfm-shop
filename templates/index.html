@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loop For Money (LFM)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #111111;
+            --card-bg: #f8f9fa;
+            --border-color: #e2e8f0;
+            --primary: #2563eb;
+        }
+
+        body.dark-mode {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --card-bg: #111111;
+            --border-color: #333333;
+            --primary: #3b82f6;
+        }
+
+        /* Dark mode requirement: Text strictly WHITE */
+        body.dark-mode *, body.dark-mode input, body.dark-mode button {
+            color: #ffffff !important;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; transition: 0.3s; }
+        body { background: var(--bg-color); color: var(--text-color); min-height: 100vh; }
+
+        header {
+            background: var(--card-bg); border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .logo { font-size: 1.3rem; font-weight: bold; color: var(--primary); }
+        .icon-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0.5rem; }
+
+        /* Mobile Menu (Hidden by Default) */
+        .mobile-menu {
+            display: none; position: absolute; top: 60px; left: 0; width: 100%;
+            background: var(--card-bg); border-bottom: 1px solid var(--border-color);
+            padding: 1rem; flex-direction: column; gap: 0.8rem;
+        }
+        .mobile-menu.active { display: flex; }
+
+        .container { max-width: 800px; margin: 1.5rem auto; padding: 0 1rem; }
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.2rem; margin-bottom: 1.2rem; }
+        input { width: 100%; padding: 0.75rem; margin: 0.5rem 0 1rem; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; }
+        
+        .chat-box { height: 280px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; background: var(--bg-color); display: flex; flex-direction: column; gap: 0.8rem; }
+        .msg { max-width: 80%; padding: 0.6rem 1rem; border-radius: 10px; font-size: 0.95rem; }
+        .msg.user { align-self: flex-end; background: var(--primary); color: #fff !important; }
+        .msg.bot { align-self: flex-start; background: var(--card-bg); border: 1px solid var(--border-color); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">LFM Store</div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button class="icon-btn" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i></button>
+            <button class="icon-btn" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
+        </div>
+        <nav class="mobile-menu" id="nav-menu">
+            <a href="#chat-sec">এআই চ্যাট</a>
+            <a href="/admin" target="_blank">অ্যাডমিন ড্যাশবোর্ড</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        
+        <!-- Google Login Section -->
+        <div class="card">
+            <h3>১. কাস্টマー প্রোফাইল ও লগইন</h3>
+            <div id="g_id_onload"
+                data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+                data-callback="handleCredentialResponse">
+            </div>
+            <div class="g_id_signin" data-type="standard" style="margin-top: 10px;"></div>
+            
+            <input type="tel" id="user-mobile" placeholder="আপনার মোবাইল নম্বর লিখুন">
+            <input type="text" id="user-address" placeholder="আপনার ঠিকানা লিখুন (গুগল ম্যাপে লাইভ ভেরিফাই হবে)">
+        </div>
+
+        <!-- Chat Section -->
+        <div class="card" id="chat-sec">
+            <h3>২. LFM AI Assistant</h3>
+            <div class="chat-box" id="chat-box">
+                <div class="msg bot">হ্যালো! LFM শপে স্বাগতম। কীভাবে সাহায্য করতে পারি?</div>
+            </div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.8rem;">
+                <input type="text" id="chat-msg" placeholder="আপনার বার্তা লিখুন..." style="margin: 0;">
+                <button style="background: var(--primary); color: white; border: none; padding: 0 1.2rem; border-radius: 6px; cursor: pointer;" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function toggleTheme() { document.body.classList.toggle('dark-mode'); }
+        function toggleMenu() { document.getElementById('nav-menu').classList.toggle('active'); }
+
+        // Google Sign-In Callback
+        function handleCredentialResponse(response) {
+            const responsePayload = parseJwt(response.credential);
+            fetch('/api/google-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    google_id: responsePayload.sub,
+                    name: responsePayload.name,
+                    mobile: document.getElementById('user-mobile').value
+                })
+            }).then(r => r.json()).then(data => alert("গুগল লগইন সফল হয়েছে: " + responsePayload.name));
+        }
+
+        function parseJwt(token) {
+            var base64Url = token.split('.')[1];
+            var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            return JSON.parse(window.atob(base64));
+        }
+
+        async function sendMsg() {
+            const mobile = document.getElementById('user-mobile').value.trim();
+            const address = document.getElementById('user-address').value.trim();
+            const input = document.getElementById('chat-msg');
+            const message = input.value.trim();
+            const box = document.getElementById('chat-box');
+
+            if(!message || !mobile) return alert("মোবাইল নম্বর এবং বার্তা টাইপ করুন!");
+
+            box.innerHTML += `<div class="msg user">${message}</div>`;
+            input.value = '';
+            box.scrollTop = box.scrollHeight;
+
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message, mobile, address })
+            });
+            const data = await res.json();
+            box.innerHTML += `<div class="msg bot">${data.response}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+    </script>
+</body>
+</html>
