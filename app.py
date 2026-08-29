@@ -13,7 +13,7 @@ TURSO_URL = "libsql://lfm-shop-db-lfm2026.aws-ap-northeast-1.turso.io"
 TURSO_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJh"
 
 # 🔑 আপনার অ্যাডমিন পাসওয়ার্ড (সরাসরি কোডে পরিবর্তন করতে পারবেন)
-ADMIN_PASSWORD = "mysecretpassword123"  # এখানে আপনার আসল পাসওয়ার্ডটি লিখে দেবেন
+ADMIN_PASSWORD = "my@as"  # এখানে আপনার আসল পাসওয়ার্ডটি লিখে দেবেন
 
 # API Keys (Render Environment Variables থেকে পড়া হবে)
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
