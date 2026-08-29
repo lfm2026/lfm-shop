@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LFM Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: sans-serif; background: #000000; color: #ffffff; padding: 1.5rem; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .tab-btn { background: #111; color: #fff; border: 1px solid #333; padding: 10px 18px; border-radius: 6px; cursor: pointer; }
+        .tab-btn.active { background: #2563eb; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .badge { background: #ef4444; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-left: 5px; }
+        .card { background: #111; border: 1px solid #333; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #333; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <h2>LFM Admin Control Panel</h2>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('customers-tab')">কাস্টমার ফোল্ডার</button>
+        <button class="tab-btn" onclick="switchTab('notif-tab')">
+            নোটিফিকেশন অ্যালার্ট <span class="badge" id="notif-count">0</span>
+        </button>
+    </div>
+
+    <!-- Customer Folder Tab -->
+    <div id="customers-tab" class="tab-content active">
+        <div class="card">
+            <h3>ডাটাবেজ কাস্টমার লিস্ট</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>মোবাইল নম্বর</th>
+                        <th>নাম</th>
+                        <th>গুগল ম্যাপস ভেরিফাইড ঠিকানা</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in customers %}
+                    <tr>
+                        <td>{{ c[0] }}</td>
+                        <td>{{ c[1] }}</td>
+                        <td>{{ c[2] or 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Live Notification Alert Tab -->
+    <div id="notif-tab" class="tab-content">
+        <div class="card" style="border-color: #f59e0b;">
+            <h3 style="color: #f59e0b;"><i class="fa-solid fa-bell"></i> ভুল শনাক্তকরণ ও লাইভ সাপোর্ট নোটিফিকেশন</h3>
+            <div id="notif-container" style="margin-top: 1rem;">লোড হচ্ছে...</div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        async function fetchNotifications() {
+            try {
+                const res = await fetch('/api/admin/notifications');
+                const data = await res.json();
+                const container = document.getElementById('notif-container');
+                document.getElementById('notif-count').innerText = data.notifications.length;
+
+                container.innerHTML = '';
+                if(data.notifications.length === 0) {
+                    container.innerHTML = '<p>কোনো নতুন নোটিফিকেশন নেই।</p>';
+                    return;
+                }
+
+                data.notifications.forEach(n => {
+                    container.innerHTML += `
+                        <div style="background: #1a1a1a; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid #ef4444;">
+                            <strong style="color: #3b82f6;">কাস্টমার নম্বর: ${n[1]}</strong>
+                            <p style="margin: 5px 0;">${n[2]}</p>
+                            <small style="color: #888;">${n[3]}</small>
+                        </div>
+                    `;
+                });
+            } catch(e){}
+        }
+
+        setInterval(fetchNotifications, 5000); // ৫ সেকেন্ড পর পর অটো রিলোড হবে
+        fetchNotifications();
+    </script>
+</body>
+</html>
