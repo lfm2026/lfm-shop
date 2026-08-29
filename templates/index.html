@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with GoNeo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --chat-bg: #ffffff;
+            --text-color: #1f2937;
+            --border-color: #e5e7eb;
+            --primary: #2563eb;
+            --user-msg: #2563eb;
+            --bot-msg: #f3f4f6;
+        }
+
+        body.dark-mode {
+            --bg-color: #09090b;
+            --chat-bg: #18181b;
+            --text-color: #f4f4f5;
+            --border-color: #27272a;
+            --primary: #3b82f6;
+            --user-msg: #2563eb;
+            --bot-msg: #27272a;
+        }
+
+        /* Dark Mode Text Rule */
+        body.dark-mode p, 
+        body.dark-mode h1, 
+        body.dark-mode h2, 
+        body.dark-mode h3, 
+        body.dark-mode span, 
+        body.dark-mode div:not(.g_id_signin):not(.g_id_signin *) {
+            color: #ffffff !important;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; transition: background 0.2s, color 0.2s; }
+        
+        body { 
+            background: var(--bg-color); 
+            color: var(--text-color); 
+            height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
+
+        /* Responsive Full Chat Room Container */
+        .chat-container {
+            width: 100%;
+            max-width: 768px;
+            height: 100vh;
+            background: var(--chat-bg);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+        }
+
+        @media (min-width: 768px) {
+            .chat-container {
+                height: 92vh;
+                border-radius: 16px;
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            }
+        }
+
+        /* Header */
+        header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--chat-bg);
+            border-top-left-radius: inherit;
+            border-top-right-radius: inherit;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.4rem;
+            border-radius: 50%;
+        }
+
+        /* Chat Messages Area */
+        .chat-messages {
+            flex: 1;
+            padding: 1.25rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .msg {
+            max-width: 82%;
+            padding: 0.75rem 1rem;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .msg.user {
+            align-self: flex-end;
+            background: var(--user-msg);
+            color: #ffffff !important;
+            border-bottom-right-radius: 2px;
+        }
+
+        .msg.bot {
+            align-self: flex-start;
+            background: var(--bot-msg);
+            border-bottom-left-radius: 2px;
+        }
+
+        /* Input Box Footer */
+        .chat-input-area {
+            padding: 1rem 1.25rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 0.6rem;
+            background: var(--chat-bg);
+            border-bottom-left-radius: inherit;
+            border-bottom-right-radius: inherit;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        .send-btn {
+            background: var(--primary);
+            color: #ffffff !important;
+            border: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        /* Google Login Popup Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal-card {
+            background: var(--chat-bg);
+            border: 1px solid var(--border-color);
+            padding: 1.75rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-card h3 { margin-bottom: 0.5rem; }
+        .modal-card p { font-size: 0.9rem; opacity: 0.8; margin-bottom: 1.25rem; }
+
+        /* Preserve Google Button Native Colors */
+        .g_id_signin {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .mobile-input-field {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <!-- Header -->
+        <header>
+            <div class="brand">
+                <i class="fa-solid fa-robot"></i>
+                <span>Chat with GoNeo</span>
+            </div>
+            <button class="icon-btn" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i></button>
+        </header>
+
+        <!-- Messages Area -->
+        <div class="chat-messages" id="chat-box">
+            <div class="msg bot">হ্যালো! আমি GoNeo AI। আপনাকে কীভাবে সাহায্য করতে পারি?</div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="chat-input-area">
+            <input type="text" id="chat-msg" placeholder="বার্তা লিখুন..." onkeypress="handleKeyPress(event)">
+            <button class="send-btn" onclick="handleSend()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- Google Login Modal Popup -->
+    <div class="modal-overlay" id="login-modal">
+        <div class="modal-card">
+            <h3>লগইন করুন</h3>
+            <p>GoNeo-এর সাথে চ্যাট চালিয়ে যেতে আপনার তথ্য প্রদান করুন।</p>
+            
+            <input type="tel" id="user-mobile" class="mobile-input-field" placeholder="আপনার মোবাইল নম্বর দিন">
+
+            <!-- Google OAuth Button Container -->
+            <div id="g_id_onload"
+                data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+                data-callback="handleCredentialResponse">
+            </div>
+            <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline"></div>
+
+            <button style="background: transparent; border: none; font-size: 0.85rem; cursor: pointer; opacity: 0.7;" onclick="closeModal()">পরে করবো</button>
+        </div>
+    </div>
+
+    <script>
+        let isLoggedIn = false;
+        let pendingMessage = "";
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') handleSend();
+        }
+
+        function handleSend() {
+            const input = document.getElementById('chat-msg');
+            const msg = input.value.trim();
+
+            if (!msg) return;
+
+            // ইউজার প্রথম মেসেজ দিলে গুগল লগইন পপ-আপ চালু হবে
+            if (!isLoggedIn) {
+                pendingMessage = msg;
+                document.getElementById('login-modal').classList.add('active');
+                return;
+            }
+
+            processMessage(msg);
+            input.value = '';
+        }
+
+        function closeModal() {
+            document.getElementById('login-modal').classList.remove('active');
+            if (pendingMessage) {
+                processMessage(pendingMessage);
+                document.getElementById('chat-msg').value = '';
+                pendingMessage = "";
+            }
+        }
+
+        async function processMessage(msg) {
+            const box = document.getElementById('chat-box');
+            const mobile = document.getElementById('user-mobile').value.trim();
+
+            box.innerHTML += `<div class="msg user">${msg}</div>`;
+            box.scrollTop = box.scrollHeight;
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg, mobile: mobile })
+                });
+                const data = await res.json();
+                box.innerHTML += `<div class="msg bot">${data.response}</div>`;
+                box.scrollTop = box.scrollHeight;
+            } catch (e) {
+                box.innerHTML += `<div class="msg bot">দুঃখিত, কোনো সমস্যা হয়েছে।</div>`;
+            }
+        }
+
+        // Google Authentication Response Handler
+        function handleCredentialResponse(response) {
+            const payload = parseJwt(response.credential);
+            const mobile = document.getElementById('user-mobile').value.trim();
+
+            fetch('/api/google-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    google_id: payload.sub,
+                    name: payload.name,
+                    mobile: mobile
+                })
+            }).then(r => r.json()).then(data => {
+                isLoggedIn = true;
+                closeModal();
+            });
+        }
+
+        function parseJwt(token) {
+            var base64Url = token.split('.')[1];
+            var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            return JSON.parse(window.atob(base64));
+        }
+    </script>
+</body>
+</html>
