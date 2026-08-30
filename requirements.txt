@@ -2,5 +2,5 @@ Flask
 flask-cors
 google-genai
 groq
-libsql-experimental
+libsql-client-py
 gunicorn
