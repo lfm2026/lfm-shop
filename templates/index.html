@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LFM Shop</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f8f9fa; }
+        
+        /* শপ হেডার */
+        header { background: #111827; color: #fff; padding: 20px; text-align: center; }
+        header h1 { font-size: 24px; }
+
+        /* চ্যাট উইজেট ডিজাইন */
+        .chat-widget { position: fixed; bottom: 20px; right: 20px; width: 350px; background: #fff; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); overflow: hidden; display: flex; flex-direction: column; height: 450px; }
+        .chat-header { background: #2563eb; color: #fff; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .chat-body { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #f3f4f6; }
+        .chat-input { display: flex; padding: 10px; border-top: 1px solid #e5e7eb; background: #fff; }
+        .chat-input input { flex: 1; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; }
+        .chat-input button { margin-left: 8px; padding: 10px 15px; background: #2563eb; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+        /* মেসেজ বাবল */
+        .msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 14px; line-height: 1.4; }
+        .msg.customer { align-self: flex-end; background: #2563eb; color: #fff; }
+        .msg.admin { align-self: flex-start; background: #e5e7eb; color: #1f2937; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Welcome to LFM Shop</h1>
+        <p>Loop For Money - Your Fashion Partner</p>
+    </header>
+
+    <!-- চ্যাট উইন্ডো -->
+    <div class="chat-widget">
+        <div class="chat-header">
+            <span>LFM Support Chat</span>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="msg admin">হ্যালো! LFM Shop-এ আপনাকে স্বাগতম। কীভাবে সাহায্য করতে পারি?</div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="custMsg" placeholder="মেসেজ লিখুন..." onkeydown="if(event.key==='Enter') sendCustMsg()">
+            <button onclick="sendCustMsg()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        async function fetchMessages() {
+            try {
+                const res = await fetch('/api/get-messages');
+                const data = await res.json();
+                if(data.status === 'success') {
+                    const chatBody = document.getElementById('chatBody');
+                    chatBody.innerHTML = '<div class="msg admin">হ্যালো! LFM Shop-এ আপনাকে স্বাগতম। কীভাবে সাহায্য করতে পারি?</div>';
+                    data.messages.forEach(m => {
+                        const div = document.createElement('div');
+                        div.className = `msg ${m.sender}`;
+                        div.textContent = m.message;
+                        chatBody.appendChild(div);
+                    });
+                    chatBody.scrollTop = chatBody.scrollHeight;
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function sendCustMsg() {
+            const input = document.getElementById('custMsg');
+            const msg = input.value.trim();
+            if(!msg) return;
+
+            input.value = '';
+            await fetch('/api/send-message', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ sender: 'customer', message: msg })
+            });
+            fetchMessages();
+        }
+
+        // প্রতি ৩ সেকেন্ড পর পর মেসেজ রিফ্রেশ হবে
+        setInterval(fetchMessages, 3000);
+        fetchMessages();
+    </script>
+</body>
+</html>
