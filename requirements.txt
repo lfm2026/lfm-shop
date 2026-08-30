@@ -1,6 +1,6 @@
 Flask
-gunicorn
-groq
+flask-cors
 google-genai
-libsql-client
-requests
+groq
+libsql-experimental
+gunicorn
