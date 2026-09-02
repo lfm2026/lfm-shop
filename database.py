@@ -57,7 +57,7 @@ def init_db():
         );
     """)
 
-    # ৫. চ্যাট সেশন টেবিল (যেমন চ্যাটের টাইটেল এডিট/ডিলিটের জন্য)
+    # ৫. চ্যাট সেশন টেবিল
     client.execute("""
         CREATE TABLE IF NOT EXISTS chat_sessions (
             session_id TEXT PRIMARY KEY,
@@ -68,20 +68,39 @@ def init_db():
         );
     """)
     
-    # 𝖹. চ্যাট মেসেজ টেবিল (অ্যাডমিন ইন্টারভেনশন ট্র্যাকিং সহ)
+    # 𝖹. চ্যাট মেসেজ টেবিল
     client.execute("""
         CREATE TABLE IF NOT EXISTS chat_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id TEXT,
             platform TEXT,
-            sender_type TEXT, -- 'user', 'ai', 'admin'
+            sender_type TEXT, 
             sender_id TEXT,
             message_text TEXT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         );
     """)
+
+    # 🔄 ৭. ডাইনামিক ওয়েবহুক সেটিংস টেবিল (নতুন)
+    client.execute("""
+        CREATE TABLE IF NOT EXISTS webhook_settings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            meta_verify_token TEXT,
+            meta_page_access_token TEXT,
+            tiktok_client_key TEXT,
+            tiktok_client_secret TEXT
+        );
+    """)
     
-    print("✅ All Turso Cloud Database Tables Initialized Perfectly!")
+    # ডিফল্ট সেটিংস রো তৈরি করা (যদি না থাকে)
+    res = client.execute("SELECT COUNT(*) as count FROM webhook_settings").rows[0]
+    if res[0] == 0:
+        client.execute("""
+            INSERT INTO webhook_settings (meta_verify_token, meta_page_access_token, tiktok_client_key, tiktok_client_secret)
+            VALUES ('lfm_verify_token_2026', '', '', '');
+        """)
+    
+    print("✅ All Turso Tables Initialized and Webhook Storage Ready!")
     client.close()
 
 if __name__ == "__main__":
